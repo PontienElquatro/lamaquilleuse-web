@@ -1,24 +1,25 @@
 # 💄 LaMaquilleuse — API Backend
 
-> Plateforme SaaS dédiée aux maquilleuses professionnelles.
-
 ![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)
 
-## Stack technique
+## Stack
 
-- **Runtime** : Node.js + NestJS
-- **Langage** : TypeScript
-- **BDD** : PostgreSQL via Prisma ORM
-- **Auth** : JWT (access + refresh) + OAuth Google
-- **Mail** : Nodemailer
-- **Paiement** : Stripe *(à venir)*
-- **Temps réel** : Socket.io *(à venir)*
-- **Déploiement** : Vercel / Railway / AWS
+| Couche | Technologie |
+|--------|------------|
+| Runtime | Node.js 20 + NestJS 10 |
+| Langage | TypeScript 5 |
+| BDD | PostgreSQL (Supabase) |
+| ORM | Prisma 5 |
+| Auth | JWT + OAuth Google |
+| Storage | Supabase Storage |
+| Déploiement | Railway |
+| CI/CD | GitHub Actions |
 
-## Modules API (`/api/v1/`)
+## Modules API `/api/v1/`
 
 | Module | Endpoint | Statut |
 |--------|----------|--------|
@@ -32,91 +33,72 @@
 | Social | `/social` | 🔄 En cours |
 | Reviews | `/reviews` | 🔄 En cours |
 
-## Installation
+## Installation locale
 
 ```bash
-# 1. Cloner le projet
+# 1. Cloner
 git clone https://github.com/PontienElquatro/lamaquilleuse-web.git
 cd lamaquilleuse-web
 
-# 2. Installer les dépendances
+# 2. Dépendances
 npm install
 
-# 3. Configurer l'environnement
+# 3. Variables d'environnement
 cp .env.example .env
-# Éditer .env avec vos valeurs
+# → Remplir les valeurs (voir section Variables)
 
-# 4. Générer le client Prisma
+# 4. Prisma
 npm run db:generate
-
-# 5. Lancer les migrations
 npm run db:migrate
 
-# 6. Démarrer en développement
+# 5. Seed (données de test)
+npm run db:seed
+
+# 6. Démarrer
 npm run start:dev
 ```
 
 ## Variables d'environnement
 
-Copier `.env.example` en `.env` et remplir toutes les valeurs.
+| Variable | Description | Où récupérer |
+|----------|-------------|--------------|
+| `DATABASE_URL` | URL PostgreSQL | Supabase → Settings → Database |
+| `SUPABASE_URL` | URL projet Supabase | Supabase → Settings → API |
+| `SUPABASE_SERVICE_KEY` | Clé service_role | Supabase → Settings → API |
+| `SUPABASE_BUCKET` | Nom du bucket | `lamaquilleuse` |
+| `JWT_SECRET` | Clé JWT access | Générer aléatoirement |
+| `JWT_REFRESH_SECRET` | Clé JWT refresh | Générer aléatoirement |
+| `GOOGLE_CLIENT_ID` | OAuth Google | Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | OAuth Google | Google Cloud Console |
+| `MAIL_*` | Config SMTP | Gmail App Password |
+| `RAILWAY_TOKEN` | Deploy token | Railway → Settings |
 
-Les variables critiques :
-- `DATABASE_URL` — connexion PostgreSQL
-- `JWT_SECRET` + `JWT_REFRESH_SECRET` — clés secrètes JWT
-- `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` — OAuth Google
-- `MAIL_*` — configuration SMTP
+## Déploiement Railway
+
+```bash
+# 1. Installer Railway CLI
+npm install -g @railway/cli
+
+# 2. Login
+railway login
+
+# 3. Lier au projet
+railway link
+
+# 4. Déployer
+railway up
+```
 
 ## Documentation API
 
-Swagger disponible en développement :
-```
-http://localhost:3000/api/docs
-```
+Swagger (dev) : `http://localhost:3000/api/docs`
 
-## Endpoints Auth
+Health check : `GET /api/v1/health`
 
-```
-POST   /api/v1/auth/register          Inscription
-POST   /api/v1/auth/login             Connexion
-POST   /api/v1/auth/refresh           Renouveler le token
-POST   /api/v1/auth/logout            Déconnexion
-GET    /api/v1/auth/verify-email      Vérifier email
-POST   /api/v1/auth/forgot-password   Mot de passe oublié
-POST   /api/v1/auth/reset-password    Réinitialiser mot de passe
-GET    /api/v1/auth/google            OAuth Google
-GET    /api/v1/auth/me                Profil courant
-DELETE /api/v1/auth/account           Supprimer le compte
-```
+## Comptes de test (après seed)
 
-## Endpoints Users
-
-```
-GET    /api/v1/users/artists                    Rechercher des maquilleuses
-GET    /api/v1/users/artists/:id                Profil public
-GET    /api/v1/users/artists/:id/portfolio      Portfolio
-GET    /api/v1/users/artists/:id/availability   Disponibilités
-GET    /api/v1/users/me                         Mon profil
-PUT    /api/v1/users/me                         Modifier mon profil
-POST   /api/v1/users/me/avatar                  Changer l'avatar
-GET    /api/v1/users/me/notifications           Mes notifications
-PATCH  /api/v1/users/me/notifications/read      Marquer lues
-POST   /api/v1/users/me/change-password         Changer mot de passe
-```
-
-## Structure du projet
-
-```
-src/
-├── auth/           # Authentification (JWT, OAuth, guards)
-├── users/          # Profils et marketplace
-├── prisma/         # PrismaService global
-├── mail/           # Service email
-├── common/         # Interceptors, filters, decorators
-└── main.ts         # Bootstrap
-prisma/
-└── schema.prisma   # Schéma de base de données
-```
-
-## Licence
-
-Propriétaire — © 2025 LaMaquilleuse
+| Rôle | Email | Mot de passe |
+|------|-------|--------------|
+| Admin | admin@lamaquilleuse.fr | Admin2024! |
+| Artiste | sophie@lamaquilleuse.fr | Artist2024! |
+| Cliente | emma@test.fr | Client2024! |

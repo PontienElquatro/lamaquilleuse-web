@@ -1,4 +1,3 @@
-// src/app.module.ts
 import { Module }             from '@nestjs/common';
 import { ConfigModule }       from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -7,40 +6,21 @@ import { PrismaModule }       from './prisma/prisma.module';
 import { AuthModule }         from './auth/auth.module';
 import { UsersModule }        from './users/users.module';
 import { MailModule }         from './mail/mail.module';
+import { StorageModule }      from './storage/storage.module';
+import { HealthController }   from './health.controller';
 
 @Module({
   imports: [
-    // Config globale
-    ConfigModule.forRoot({
-      isGlobal:  true,
-      envFilePath: '.env',
-    }),
-
-    // Rate limiting global
-    ThrottlerModule.forRoot([{
-      ttl:   60_000,
-      limit: 100,
-    }]),
-
-    // Infrastructure
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     MailModule,
-
-    // Modules métier
+    StorageModule,
     AuthModule,
     UsersModule,
-
-    // TODO: à ajouter au fur et à mesure
-    // ServicesModule,
-    // BookingsModule,
-    // AgendaModule,
-    // PaymentsModule,
-    // MessagesModule,
-    // SocialModule,
-    // ReviewsModule,
   ],
+  controllers: [HealthController],
   providers: [
-    // Rate limiting appliqué globalement
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
