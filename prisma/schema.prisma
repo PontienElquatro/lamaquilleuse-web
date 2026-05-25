@@ -1,0 +1,225 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────
+
+enum Role {
+  ARTIST
+  CLIENT
+  ADMIN
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+}
+
+enum ServiceCategory {
+  MARIAGE
+  SOIREE
+  SHOOTING
+  EDITORIAL
+  SFX
+  BEAUTE_QUOTIDIENNE
+  SCENE_SPECTACLE
+  AUTRE
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REJECTED
+  EXPIRED
+}
+
+// ─── Models ───────────────────────────────────────────────────────────
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  password      String?
+  provider      AuthProvider @default(LOCAL)
+  providerId    String?
+
+  role          Role         @default(CLIENT)
+
+  firstName     String
+  lastName      String
+  phone         String?
+  avatar        String?
+  bio           String?      @db.Text
+
+  // Champs artiste
+  city          String?
+  specialties   String[]
+  yearsOfExp    Int?
+  instagramUrl  String?
+  websiteUrl    String?
+  isVerified    Boolean      @default(false)
+
+  // Tokens
+  refreshToken        String?
+  resetPasswordToken  String?
+  resetPasswordExpiry DateTime?
+  emailVerifyToken    String?
+  isEmailVerified     Boolean  @default(false)
+
+  // Relations
+  services      Service[]
+  bookingsAsClient  Booking[] @relation("ClientBookings")
+  bookingsAsArtist  Booking[] @relation("ArtistBookings")
+  reviewsGiven      Review[]  @relation("ReviewsGiven")
+  reviewsReceived   Review[]  @relation("ReviewsReceived")
+  notifications     Notification[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  @@index([email])
+  @@index([role])
+  @@index([city])
+}
+
+model Service {
+  id            String          @id @default(uuid())
+  slug          String          @unique
+  title         String
+  description   String          @db.Text
+  category      ServiceCategory
+  status        ServiceStatus   @default(DRAFT)
+
+  duration      Int
+  price         Int
+  currency      String          @default("EUR")
+
+  isHomeService Boolean         @default(false)
+  travelFee     Int?
+
+  maxBookingsPerDay Int         @default(3)
+  viewCount     Int             @default(0)
+
+  images        ServiceImage[]
+  tags          String[]
+
+  artistId      String
+  artist        User            @relation(fields: [artistId], references: [id], onDelete: Cascade)
+
+  bookings      Booking[]
+  reviews       Review[]
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  deletedAt     DateTime?
+
+  @@index([artistId])
+  @@index([category])
+  @@index([status])
+  @@index([slug])
+}
+
+model ServiceImage {
+  id        String   @id @default(uuid())
+  url       String
+  key       String
+  order     Int      @default(0)
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([serviceId])
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  status        BookingStatus @default(PENDING)
+
+  requestedDate DateTime
+  requestedTime String
+  location      String?
+  notes         String?       @db.Text
+
+  amount        Int
+  currency      String        @default("EUR")
+
+  stripePaymentIntentId String?
+
+  clientId      String
+  client        User          @relation("ClientBookings", fields: [clientId], references: [id])
+
+  artistId      String
+  artist        User          @relation("ArtistBookings", fields: [artistId], references: [id])
+
+  serviceId     String
+  service       Service       @relation(fields: [serviceId], references: [id])
+
+  review        Review?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([artistId])
+  @@index([serviceId])
+  @@index([status])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?  @db.Text
+  reply     String?  @db.Text
+
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+
+  clientId  String
+  client    User     @relation("ReviewsGiven", fields: [clientId], references: [id])
+
+  artistId  String
+  artist    User     @relation("ReviewsReceived", fields: [artistId], references: [id])
+
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id])
+
+  createdAt DateTime @default(now())
+  deletedAt DateTime?
+
+  @@index([artistId])
+  @@index([clientId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean  @default(false)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+}
