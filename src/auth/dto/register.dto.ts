@@ -1,9 +1,5 @@
-// src/auth/dto/register.dto.ts
-import {
-  IsEmail, IsString, IsEnum,
-  MinLength, MaxLength, Matches,
-} from 'class-validator';
-import { Role } from '@prisma/client';
+import { IsEmail, IsString, IsEnum, MinLength, MaxLength, Matches } from 'class-validator';
+import { Role } from '../../common/enums';
 
 export class RegisterDto {
   @IsEmail({}, { message: 'Email invalide' })
@@ -18,12 +14,12 @@ export class RegisterDto {
   password: string;
 
   @IsString()
-  @MinLength(2, { message: 'Prénom trop court' })
+  @MinLength(2)
   @MaxLength(50)
   firstName: string;
 
   @IsString()
-  @MinLength(2, { message: 'Nom trop court' })
+  @MinLength(2)
   @MaxLength(50)
   lastName: string;
 

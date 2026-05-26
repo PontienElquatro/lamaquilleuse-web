@@ -5,7 +5,7 @@ import {
 import { PrismaService }    from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { SearchArtistsDto } from './dto/search-artists.dto';
-import { ServiceStatus }    from '@prisma/client';
+import { ServiceStatus } from '../common/enums';
 
 @Injectable()
 export class UsersService {
