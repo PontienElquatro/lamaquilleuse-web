@@ -11,7 +11,11 @@ RUN npx prisma generate
 
 COPY . .
 
-RUN npm run build && echo "✅ Build OK" && ls -la dist/
+# Compilation directe avec tsc (bypass nest CLI)
+RUN ./node_modules/.bin/tsc -p tsconfig.json \
+  && echo "=== dist/ ===" \
+  && ls -la dist/ \
+  && echo "=== Build OK ==="
 
 ENV NODE_ENV=production
 EXPOSE 3000
